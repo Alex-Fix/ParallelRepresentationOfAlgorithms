@@ -9,11 +9,15 @@ int** create_random_matrix_B(int n, int random_limit, bool singleMatrix);
 void print_matrix(int** matrix, int n);
 int** matrix_multiply(int** A, int** B, int n);
 int** matrix_multiply_single_assign(int** A, int** B, int n);
+int** recursive_multiply_main(int** A, int** B, int n);
+void recursive_multiply(int*** matrix3d, int** A, int** B, int n, int& k, int& i, int& j);
+void delete_matrix3d(int*** matrix3d, int heigth, int depth);
+int** matrix_multiply_single_assign(int** A, int** B, int n);
 
 int main() {
 	srand(time(NULL));
 
-	int n = 10;
+	int n = 6;
 
 	int** A = create_matrix_A(n);
 	cout << "matrix A:" << endl;
@@ -31,10 +35,15 @@ int main() {
 	cout << endl << "matrix CSingle:" << endl;
 	print_matrix(CSingle, n);
 
+	int** CSingleRecursive = recursive_multiply_main(A, B, n);
+	cout << endl << "matrix CSingleRecursive:" << endl;
+	print_matrix(CSingleRecursive, n);
+
 	delete_matrix(A, n);
 	delete_matrix(B, n);
 	delete_matrix(C, n);
 	delete_matrix(CSingle, n);
+	delete_matrix(CSingleRecursive, n);
 
 	return 0;
 }
@@ -110,33 +119,73 @@ int** matrix_multiply(int** A, int** B, int n) {
 	return matrix;
 }
 
-int** matrix_multiply_single_assign(int** A, int** B, int n) {
-	// create matrix
-	int*** matrix3d = new int** [n];
-	for (int k = 0; k <= n; k++) {
-		matrix3d[k] = new int* [n];
-		for (int i = 0; i < n; i++) {
-			matrix3d[k][i] = new int[n];
-			for (int j = 0; j < n; j++)
+int*** create_matrix3d(int heigth, int weigth, int depth) {
+	int*** matrix3d = new int** [depth];
+	for (int k = 0; k < depth; k++) {
+		matrix3d[k] = new int* [heigth];
+		for (int i = 0; i < heigth; i++) {
+			matrix3d[k][i] = new int[weigth];
+			for (int j = 0; j < weigth; j++)
 				matrix3d[k][i][j] = 0;
 		}
 	}
+	return matrix3d;
+}
+
+void delete_matrix3d(int*** matrix3d, int heigth, int depth) {
+	for (int k = 0; k < depth; k++) {
+		for (int i = 0; i < heigth; i++)
+			delete[] matrix3d[k][i];
+		delete[] matrix3d[k];
+	}
+}
+
+int** matrix_multiply_single_assign(int** A, int** B, int n) {
+	int*** matrix3d = create_matrix3d(n, n, n + 1);
 
 	// matrix multiply
-	for (int k = 0; k < n; k++) 
+	for (int k = 0; k < n; k++) {
 		for (int i = 0; i < n; i++)
-			for (int j = 0; j < n; j++) 
+			for (int j = 0; j < n; j++)
 				matrix3d[k + 1][i][j] = matrix3d[k][i][j] + A[i][k] * B[k][j];
+	}
 	
 	// multiply result
 	int** matrix = matrix3d[n];
 
-	// delete not result matrixes
-	for (int k = 0; k < n; k++) {
-		for (int i = 0; i < n; i++)
-			delete[] matrix3d[k][i];
-		delete[] matrix3d[k];
-	}
+	delete_matrix3d(matrix3d, n, n);
 		
 	return matrix;
+}
+
+int** recursive_multiply_main(int** A, int** B, int n) {
+	int*** matrix3d = create_matrix3d(n, n, n + 1);
+
+	
+	int k = 0, i = 0, j = 0;
+	//recursive_multiply
+	recursive_multiply(matrix3d, A, B, n, k, i, j);
+
+	// multiply result
+	int** matrix = matrix3d[n];
+
+	return matrix;
+}
+
+void recursive_multiply(int*** matrix3d, int** A, int** B, int n, int& k, int& i, int& j) {
+	if (k < n) {
+		if (i < n) {
+			if (j < n) {
+				matrix3d[k + 1][i][j] = matrix3d[k][i][j] + A[i][k] * B[k][j];
+				j++;
+				recursive_multiply(matrix3d, A, B, n, k, i, j);
+			}
+			j = 0;
+			i++;
+			recursive_multiply(matrix3d, A, B, n, k, i, j);
+		}
+		i = 0;
+		k++;
+		recursive_multiply(matrix3d, A, B, n, k, i, j);
+	}
 }
