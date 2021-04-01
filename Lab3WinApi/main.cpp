@@ -1,6 +1,5 @@
-#include <iostream>
+#include <Windows.h>
 #include <ctime>
-using namespace std;
 
 int** create_matrix(int n);
 void delete_matrix(int** matrix, int n);
@@ -14,45 +13,52 @@ void delete_matrix3d(int*** matrix3d, int heigth, int depth);
 int** matrix_multiply_single_assign(int** A, int** B, int n);
 int** perfomace_recursive_multiply_main(int** A, int** B, int n);
 void perfomace_recursive_multiply(int*** matrix3d, int** A, int** B, int n, int& k, int& i, int& j);
-void print_matrix(int** matrix, int n);
 
-int main() {
-	srand(time(NULL));
+int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR szCmdLine, int nCmdShow) {
+	MSG msg{};
+	HWND hwnd{};
+	WNDCLASSEX wc{ sizeof(WNDCLASSEX) };
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hbrBackground = reinterpret_cast<HBRUSH>(GetStockObject(WHITE_BRUSH));
+	wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+	wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
+	wc.hInstance = hInstance;
+	wc.lpfnWndProc = [](HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)->LRESULT
+	{
+		switch (uMsg) {
+		case WM_DESTROY:
+		{
+			PostQuitMessage(EXIT_SUCCESS);
+		}
+		return 0;
+		case WM_LBUTTONDOWN:
+		{
+			int k = 5;
+		}
+		}
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	};
+	wc.lpszClassName = L"MyAppClass";
+	wc.lpszMenuName = nullptr;
+	wc.style = CS_VREDRAW | CS_HREDRAW;
 
-	int n = 10;
+	if (!RegisterClassEx(&wc))
+		return EXIT_FAILURE;
 
-	int** A = create_matrix_A(n);
-	cout << "matrix A:" << endl;
-	print_matrix(A, n);
+	if (hwnd = CreateWindow(wc.lpszClassName, L"Laba3 by AlexFix", WS_OVERLAPPEDWINDOW, 100, 100, 600, 600, nullptr, nullptr, wc.hInstance, nullptr); hwnd == INVALID_HANDLE_VALUE)
+		return EXIT_FAILURE;
 
-	int** B = create_random_matrix_B(n, 10, false);
-	cout << endl << "matrix B:" << endl;
-	print_matrix(B, n);
+	ShowWindow(hwnd, nCmdShow);
+	UpdateWindow(hwnd);
 
-	int** C = matrix_multiply(A, B, n);
-	cout << endl << "matrix C:" << endl;
-	print_matrix(C, n);
+	while (GetMessage(&msg, nullptr, 0, 0)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
-	int** CSingle = matrix_multiply_single_assign(A, B, n);
-	cout << endl << "matrix CSingle:" << endl;
-	print_matrix(CSingle, n);
-
-	int** CSingleRecursive = recursive_multiply_main(A, B, n);
-	cout << endl << "matrix CSingleRecursive:" << endl;
-	print_matrix(CSingleRecursive, n);
-
-	int** CSingleLocalRecursive = perfomace_recursive_multiply_main(A, B, n);
-	cout << endl << "matrix CSingleLocalRecursive:" << endl;
-	print_matrix(CSingleLocalRecursive, n);
-
-	delete_matrix(A, n);
-	delete_matrix(B, n);
-	delete_matrix(C, n);
-	delete_matrix(CSingle, n);
-	delete_matrix(CSingleRecursive, n);
-	delete_matrix(CSingleLocalRecursive, n);
-
-	return 0;
+	return static_cast<int>(msg.wParam);
 }
 
 int** create_matrix(int n) {
@@ -102,7 +108,7 @@ int** create_random_matrix_B(int n, int random_limit = 10, bool singleMatrix = f
 int** matrix_multiply(int** A, int** B, int n) {
 	int** matrix = create_matrix(n);
 
-	for(int i = 0; i < n; i++)
+	for (int i = 0; i < n; i++)
 		for (int j = 0; j < n; j++)
 		{
 			for (int k = 0; k < n; k++)
@@ -141,19 +147,19 @@ int** matrix_multiply_single_assign(int** A, int** B, int n) {
 		for (int i = 0; i < n; i++)
 			for (int j = 0; j < n; j++)
 				matrix3d[k + 1][i][j] = matrix3d[k][i][j] + A[i][k] * B[k][j];
-		
+
 	// multiply result
 	int** matrix = matrix3d[n];
 
 	delete_matrix3d(matrix3d, n, n);
-		
+
 	return matrix;
 }
 
 int** recursive_multiply_main(int** A, int** B, int n) {
 	int*** matrix3d = create_matrix3d(n, n, n + 1);
 
-	
+
 	int k = 0, i = 0, j = 0;
 	//recursive_multiply
 	recursive_multiply(matrix3d, A, B, n, k, i, j);
@@ -186,7 +192,7 @@ void recursive_multiply(int*** matrix3d, int** A, int** B, int n, int& k, int& i
 
 int** perfomace_recursive_multiply_main(int** A, int** B, int n) {
 	int*** matrix3d = create_matrix3d(n, n, n + 1);
-	
+
 	int k = 0, i = 0, j = 0;
 	//recursive_multiply
 	perfomace_recursive_multiply(matrix3d, A, B, n, k, i, j);
@@ -203,7 +209,7 @@ void perfomace_recursive_multiply(int*** matrix3d, int** A, int** B, int n, int&
 	if (k < n) {
 		if (i < n) {
 			if (j < n) {
-				if(A[i][k] != 0 && B[k][j] != 0)
+				if (A[i][k] != 0 && B[k][j] != 0)
 					matrix3d[k + 1][i][j] = A[i][k] * B[k][j];
 				else
 					matrix3d[k + 1][i][j] = matrix3d[k][i][j];
@@ -217,19 +223,5 @@ void perfomace_recursive_multiply(int*** matrix3d, int** A, int** B, int n, int&
 		i = 0;
 		k++;
 		perfomace_recursive_multiply(matrix3d, A, B, n, k, i, j);
-	}
-}
-
-void print_matrix(int** matrix, int n) {
-	for (int i = 0; i < n; i++)
-	{
-		for (int j = 0; j < n; j++)
-		{
-			if (j == n - 1)
-				cout << matrix[i][j];
-			else
-				cout << matrix[i][j] << " ";
-		}
-		cout << endl;
 	}
 }
